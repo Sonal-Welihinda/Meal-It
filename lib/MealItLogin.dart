@@ -1,23 +1,23 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:meal_it/MealItRegister.dart';
+import 'package:meal_it/Models/BusinessLayer.dart';
 import 'package:meal_it/PageLayers/HomePage.dart';
 
 class MealItLogin  extends StatelessWidget{
   const MealItLogin({super.key});
 
+
+
   @override
   Widget build(BuildContext context) {
     final TextEditingController email = TextEditingController();
     final TextEditingController password = TextEditingController();
+    final BusinessLayer _businessL = BusinessLayer();
 
     Future loginUser(context) async{
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email.text.trim(),
-        password: password.text.trim(),
-      );
-
-      if (userCredential != null) {
+      String result = await _businessL.loginUser(email.text, password.text);
+      if (result =="Success") {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Success fully login'),
