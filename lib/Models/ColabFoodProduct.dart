@@ -21,7 +21,7 @@ class ColabFoodProduct{
       'ProductName': _productName,
       'Quantity': _quantity,
       'Time':_offerEndTime,
-      'Original-Price':_originalPrice,
+      'Original-Price':_originalPrice.toString(),
       'Price':_price.toString(),
       'BranchID' : _branchID,
       'ProductImg' : _productImg,

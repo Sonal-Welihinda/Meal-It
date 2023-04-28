@@ -33,6 +33,8 @@ class _RecipeHomePageState extends State<RecipeHomePage> {
     // TODO: implement initState
     super.initState();
     getPopularRecipes();
+
+    _businessL.loadWishlistFromFirebase();
   }
 
 

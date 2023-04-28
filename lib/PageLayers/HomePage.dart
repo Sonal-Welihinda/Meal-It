@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:meal_it/Models/FoodCategory.dart';
+import 'package:meal_it/PageLayers/CartPage.dart';
 import 'package:meal_it/PageLayers/RecipeViewPage.dart';
 
 import 'package:meal_it/view_models/ColabProductCard.dart';
@@ -10,7 +11,7 @@ import '../Models/Recipe.dart';
 import '../view_models/AdvertisementCard.dart';
 import '../view_models/PackCard.dart';
 import '../view_models/ProductCard.dart';
-import 'ProductPage.dart';
+import 'ProductHomePage.dart';
 import 'RecipeHomePage.dart';
 
 
@@ -22,7 +23,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   int _selectedIndex = 0;
-  final List<Widget> _widgetOptions = [    ProductPage(),    RecipeHomePage(), ];
+  final List<Widget> _widgetOptions = [    ProductPage(), CartPage() ,  RecipeHomePage(), ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -42,11 +43,16 @@ class _HomePageState extends State<HomePage> {
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
-              label: 'Page 1',
+              label: 'Products',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_cart),
+              label: 'Cart',
+            ),
+
+            BottomNavigationBarItem(
               icon: Icon(Icons.business),
-              label: 'Page 2',
+              label: 'Recipes',
             ),
           ],
         ),

@@ -35,8 +35,15 @@ class FoodCategory{
 
   factory FoodCategory.fromSnapshot3(Map<String, dynamic> snapshot){
     return FoodCategory.name(
-      categoryName: snapshot["FoodCategoryName"],
+      categoryName: snapshot["FoodCategoryName"] ,
       docID: snapshot["FoodCategoryID"],
+    );
+  }
+
+  factory FoodCategory.fromMap(Map<String, dynamic> snapshot){
+    return FoodCategory.name(
+      categoryName: snapshot["Type"]["FoodCategoryName"],
+      docID: snapshot["Type"]["FoodCategoryID"],
     );
   }
 

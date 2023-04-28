@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:meal_it/Models/SurprisePack.dart';
 
 class PackCard extends StatefulWidget {
-  const PackCard({Key? key}) : super(key: key);
+  final SurprisePack pack;
+  const PackCard({Key? key,required this.pack}) : super(key: key);
 
   @override
   State<PackCard> createState() => _PackCardState();
@@ -18,9 +20,11 @@ class _PackCardState extends State<PackCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.network(
-              'https://freedesignfile.com/upload/2016/11/Poster-fast-food-vector-material-04.jpg',
-              fit: BoxFit.cover,
+            Expanded(
+              child: Image.network(
+                widget.pack.imageUrl,
+                fit: BoxFit.cover,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -28,7 +32,7 @@ class _PackCardState extends State<PackCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Name',
+                    widget.pack.packName,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18.0,
@@ -36,7 +40,7 @@ class _PackCardState extends State<PackCard> {
                   ),
                   SizedBox(height: 4.0),
                   Text(
-                    'Some smaller text',
+                    "item in the pack : ${widget.pack.numberOfItems}",
                     style: TextStyle(
                       fontSize: 14.0,
                     ),
@@ -45,9 +49,9 @@ class _PackCardState extends State<PackCard> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: 8,bottom: 8),
               child: Text(
-                'Right-aligned text',
+                "Rs : ${widget.pack.price}",
                 textAlign: TextAlign.right,
               ),
             ),

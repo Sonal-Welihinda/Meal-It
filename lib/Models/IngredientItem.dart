@@ -27,4 +27,10 @@ class IngredientItem{
 
     return data.map((e) => IngredientItem.fromSnapshot(e)).toList();
   }
+
+  static List<IngredientItem> toIngredientList2(Map<String,dynamic> snapshot){
+    List<dynamic> data = snapshot["IngredientList"];
+
+    return data.map((e) => IngredientItem.fromSnapshot(e)).toList();
+  }
 }

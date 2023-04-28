@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:meal_it/Models/ColabFoodProduct.dart';
 
 class ColabProductCard extends StatefulWidget {
-  const ColabProductCard({Key? key}) : super(key: key);
+  ColabFoodProduct foodProduct;
+  ColabProductCard({Key? key,required this.foodProduct}) : super(key: key);
 
   @override
   State<ColabProductCard> createState() => _ColabProductCardState();
@@ -18,9 +20,11 @@ class _ColabProductCardState extends State<ColabProductCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.network(
-              'https://freedesignfile.com/upload/2016/11/Poster-fast-food-vector-material-04.jpg',
-              fit: BoxFit.cover,
+            Expanded(
+              child: Image.network(
+                widget.foodProduct.productImg,
+                fit: BoxFit.cover,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -28,7 +32,7 @@ class _ColabProductCardState extends State<ColabProductCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Name',
+                    widget.foodProduct.productName,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18.0,
@@ -36,7 +40,7 @@ class _ColabProductCardState extends State<ColabProductCard> {
                   ),
                   SizedBox(height: 4.0),
                   Text(
-                    'Some smaller text',
+                    'by Colab CompanyName',
                     style: TextStyle(
                       fontSize: 14.0,
                     ),
@@ -47,10 +51,12 @@ class _ColabProductCardState extends State<ColabProductCard> {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: Text(
-                'Right-aligned text',
+                "Rs :${widget.foodProduct.price}",
                 textAlign: TextAlign.right,
               ),
             ),
+
+            SizedBox(height: 10,),
           ],
         ),
       ),

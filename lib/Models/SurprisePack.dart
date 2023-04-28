@@ -28,22 +28,24 @@ class SurprisePack{
     return{
       'PackName': packName,
       'Description': packDescription,
-      'Price': price,
-      'Quantity': quantity,
+      'Price': price.toString(),
+      'Quantity': quantity.toInt(),
       'PackImgUrl': imageUrl,
-      'NumOfItems':numberOfItems,
+      'NumOfItems':numberOfItems.toInt(),
       'BranchID':branchID
     };
   }
+
+
 
   factory SurprisePack.fromSnapshot(DocumentSnapshot snapshot){
     return SurprisePack.name(
       packName: snapshot.get("PackName"),
       packDescription: snapshot.get("Description"),
       price: BigInt.parse(snapshot.get("Price")) ,
-      quantity: BigInt.parse(snapshot.get("Quantity")) ,
+      quantity: BigInt.parse(snapshot.get("Quantity").toString()) ,
       imageUrl: snapshot.get("PackImgUrl"),
-      numberOfItems: BigInt.parse(snapshot.get("NumOfItems")) ,
+      numberOfItems: BigInt.parse(snapshot.get("NumOfItems").toString()) ,
       branchID: snapshot.get("BranchID"),
       docID: snapshot.id
     );

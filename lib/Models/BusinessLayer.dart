@@ -1,12 +1,15 @@
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:meal_it/Models/Branch.dart';
+import 'package:meal_it/Models/CartModel.dart';
 import 'package:meal_it/Models/Customer.dart';
 import 'package:meal_it/Models/Recipe.dart';
 import 'package:meal_it/Models/SurprisePack.dart';
@@ -14,7 +17,9 @@ import 'package:meal_it/Services/FirebaseDBServices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'ColabFoodProduct.dart';
+import 'FoodCategory.dart';
 import 'FoodProduct.dart';
+import 'IngredientItem.dart';
 
 class BusinessLayer{
   final FirebaseDBServices _dbServices = FirebaseDBServices();
@@ -129,6 +134,8 @@ class BusinessLayer{
     return branches;
   }
 
+
+  //Colab products
   Future<List<ColabFoodProduct>> getNearColabProducts(double latitude,double longitude) async {
     List<ColabFoodProduct> products=[];
 
@@ -150,6 +157,12 @@ class BusinessLayer{
     return products;
   }
 
+  Future<ColabFoodProduct> getColabFoodProductById(String foodID) async {
+    ColabFoodProduct colabFoodProduct = await _dbServices.getColabFoodProductById(foodID);
+
+    return colabFoodProduct;
+  }
+
 
 
   //Surprise pack
@@ -157,6 +170,11 @@ class BusinessLayer{
     Branch branch = (await _dbServices.getAllBranches()).last;
     List<SurprisePack> surprisePacks = await _dbServices.getAllSurprisePacks(branch.uid);
     print(surprisePacks.length);
+    return surprisePacks;
+  }
+
+  Future<SurprisePack> getSurprisePackByID(String surprisePackID) async {
+    SurprisePack surprisePacks = await _dbServices.getSurprisePackByID(surprisePackID);
     return surprisePacks;
   }
 
@@ -168,6 +186,11 @@ class BusinessLayer{
     return productList;
   }
 
+  Future<FoodProduct> getFoodProductByID(String foodID) async {
+    FoodProduct foodProduct = await _dbServices.getFoodProductByID(foodID);
+
+    return foodProduct;
+  }
 
 //
 //  Recipes
@@ -180,4 +203,147 @@ class BusinessLayer{
 
     return list;
   }
+
+
+//
+// Save Recipes
+//
+
+  Future<String> addSaveRecipe(Recipe recipe) async {
+    prefs ??= await SharedPreferences.getInstance();
+    String userID = await loadSavedValue("UserID");
+
+    if(userID.trim().isEmpty){
+      return "failed";
+    }
+    String result = await _dbServices.addSaveRecipe(userID,recipe);
+
+    // Add item to SharedPreference
+    List<String>? wishlist = [];
+    String? wishlistString = prefs?.getString('wishlist');
+    if (wishlistString != null) {
+
+      wishlist = (json.decode(wishlistString)).toList();
+    }
+    wishlist?.add(recipe.docID!);
+    prefs?.setString('wishlist', json.encode(wishlist));
+
+
+
+    return result;
+  }
+
+
+  List<String>getWishlist() {
+    List<String>? wishlist = [];
+    String? wishlistString = prefs?.getString('wishlist');
+    if (wishlistString != null) {
+      wishlist = (json.decode(wishlistString) as List).map((i) => i.toString()).toList();
+    }
+
+    return wishlist!;
+  }
+
+  bool isItAlreadyInSavedList(String recipeID){
+    List<String> recipesID = getWishlist();
+    List<String> result1 = recipesID.where((element) => element ==recipeID).toList();
+
+    // Recipe result = recipes.firstWhere((element) => element.docID ==recipeID);
+
+    return result1.length>0;
+  }
+
+
+  // Function to load the list of wishlist items from Firebase
+  void loadWishlistFromFirebase() async {
+    String userID = await loadSavedValue("UserID");
+    List<String>? saveRecipeIds =[];
+    List<Recipe> saveRecipes = await _dbServices.getSavedRecipes(userID);
+    saveRecipeIds = saveRecipes.map((e) => e.docID.toString()).toList();
+
+    // Compare the Firebase list with the SharedPreference list to ensure they are in sync
+    // List<Recipe> localWishlist = getWishlist();
+
+    prefs?.setString('wishlist', json.encode(saveRecipeIds));
+
+  }
+
+
+  // Function to remove an item from the wishlist
+  Future<String> removeFromWishlist(Recipe recipe) async {
+    // Remove item from Firebase
+    String userID = await loadSavedValue("UserID");
+    String result = await  _dbServices.removeSaveRecipe(userID, recipe.docID!);
+
+    // Remove item from SharedPreference
+    List<String> wishlist = [];
+    String? wishlistString = prefs?.getString('wishlist');
+    if (wishlistString != null) {
+      wishlist = (json.decode(wishlistString) as List).map((i) => i.toString()).toList();
+    }
+    wishlist.removeWhere((i) => i.toString() == recipe.docID!);
+    prefs?.setString('wishlist', json.encode(wishlist));
+
+    return result;
+  }
+
+
+  Future<String> addToCart({SurprisePack? pack,ColabFoodProduct? colabFoodProduct,FoodProduct? mealShipProduct}) async{
+
+    Map<String,dynamic> productData;
+
+    String userID = await loadSavedValue("UserID");
+    String productID;
+
+    if (pack != null && colabFoodProduct == null && mealShipProduct == null) {
+      productData = pack.toJson();
+      productID = pack.docID;
+      productData["ProductType"]="Pack";
+    } else if (pack == null && colabFoodProduct != null && mealShipProduct == null) {
+      productID = colabFoodProduct.productId;
+      productData = colabFoodProduct.toJson();
+      productData["ProductType"]="ColabProduct";
+
+    } else if (pack == null && colabFoodProduct == null && mealShipProduct != null) {
+      productID = mealShipProduct.docID;
+      productData = mealShipProduct.toJson();
+      productData["ProductType"]="MealShipProduct";
+    } else {
+      return "failed";
+    }
+
+    String result = await _dbServices.addToCart(userID, productData,productID);
+
+
+    return result;
+  }
+
+
+  Future<CartModel> getCart() async {
+    CartModel cartModel =CartModel();
+    String userID = await loadSavedValue("UserID");
+
+    List<DocumentSnapshot> docus = await _dbServices.getCartList(userID);
+
+    for (DocumentSnapshot document in docus) {
+      // access individual document fields
+      String type = document.get("ProductType");
+
+      if(type== "Pack"){
+        cartModel.surpriseList.add(SurprisePack.fromSnapshot(document));
+      }
+
+      if(type=="ColabProduct"){
+        cartModel.colabFoodProduct.add(ColabFoodProduct.fromSnapshot(document));
+      }
+
+      if(type == "MealShipProduct"){
+        cartModel.foodProduct.add(FoodProduct.fromSnapshot(document));
+      }
+    }
+
+    return cartModel;
+
+  }
+
 }

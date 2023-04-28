@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:meal_it/Models/FoodProduct.dart';
 
 class ProductCard extends StatefulWidget {
-  const ProductCard({Key? key}) : super(key: key);
+  FoodProduct foodProduct;
+  ProductCard({Key? key,required this.foodProduct}) : super(key: key);
 
   @override
   State<ProductCard> createState() => _ProductCardState();
@@ -16,7 +18,8 @@ class _ProductCardState extends State<ProductCard> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Image.network(
-            'https://freedesignfile.com/upload/2016/11/Poster-fast-food-vector-material-04.jpg',
+            height: 100,
+            widget.foodProduct.imgUrl,
             fit: BoxFit.cover,
           ),
           Padding(
@@ -25,7 +28,7 @@ class _ProductCardState extends State<ProductCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Name',
+                  widget.foodProduct.foodName,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18.0,
@@ -33,7 +36,7 @@ class _ProductCardState extends State<ProductCard> {
                 ),
                 SizedBox(height: 4.0),
                 Text(
-                  'Some smaller text',
+                  widget.foodProduct.foodRecipe.recipeName,
                   style: TextStyle(
                     fontSize: 14.0,
                   ),
@@ -44,7 +47,7 @@ class _ProductCardState extends State<ProductCard> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: Text(
-              'Right-aligned text',
+              widget.foodProduct.price.toString(),
               textAlign: TextAlign.right,
             ),
           ),

@@ -72,4 +72,19 @@ class Recipe{
     return recipe;
   }
 
+  factory Recipe.FromMap(Map<String, dynamic> snapshot){
+    Recipe recipe = Recipe.empty();
+    recipe.recipeName= snapshot["RecipeName"];
+    recipe.recipeDescription= snapshot["RecipeDescription"];
+    recipe.type= FoodCategory.fromMap(snapshot);
+    recipe.time= snapshot["Time"];
+    recipe.ingredientList= IngredientItem.toIngredientList2(snapshot);
+    recipe.steps= List<String>.from(snapshot["Steps"]);
+    recipe.docID= snapshot['docID'];
+    recipe.recipeImage= snapshot["RecipeImage"];
+    recipe.servings=snapshot["Servings"];
+
+    return recipe;
+  }
+
 }

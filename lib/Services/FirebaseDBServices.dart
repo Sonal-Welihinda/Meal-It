@@ -98,7 +98,7 @@ class FirebaseDBServices extends CustomerInterface {
   @override
   Future<String> updateCustomer(Customer customer) async {
     try{
-      userDocRef.doc(customer.uID).update(customer.toJson());
+      await userDocRef.doc(customer.uID).update(customer.toJson());
 
       return "Success";
     } on FirebaseAuthException catch (e){
@@ -107,7 +107,7 @@ class FirebaseDBServices extends CustomerInterface {
     }
   }
 
-  //load and save kiyala method dekka copyk ganna ona  , Save user id and name in share pref and when registering add acctype and default image ;
+
 
   @override
   Future<DocumentSnapshot?> getUserData(String uid) async {
@@ -168,6 +168,12 @@ class FirebaseDBServices extends CustomerInterface {
     return foodPackList;
   }
 
+  @override
+  Future<SurprisePack> getSurprisePackByID(String surprisePackID) async {
+    DocumentSnapshot documentSnapshot = await surprisePackDocRef.doc(surprisePackID).get();
+    SurprisePack foodPackList = SurprisePack.fromSnapshot(documentSnapshot);
+    return foodPackList;
+  }
 
   //MealShip Product
   @override
@@ -179,6 +185,14 @@ class FirebaseDBServices extends CustomerInterface {
     return foodProductList;
   }
 
+  @override
+  Future<FoodProduct> getFoodProductByID(String foodID) async {
+
+    DocumentSnapshot documentSnapshot = await foodProductDocRef.doc(foodID).get();
+    FoodProduct foodProductList = FoodProduct.fromSnapshot(documentSnapshot);
+
+    return foodProductList;
+  }
 
   //Colab products
   @override
@@ -187,6 +201,15 @@ class FirebaseDBServices extends CustomerInterface {
     List<ColabFoodProduct> foodList = querySnapshot.docs.map((doc) => ColabFoodProduct.fromSnapshot(doc)).toList();
 
     return foodList;
+  }
+
+  //Colab products
+  @override
+  Future<ColabFoodProduct> getColabFoodProductById(String foodID) async {
+    DocumentSnapshot documentSnapshot = await companyFood.doc(foodID).get();
+    ColabFoodProduct foodProduct = ColabFoodProduct.fromSnapshot(documentSnapshot);
+
+    return foodProduct;
   }
 
 
@@ -200,4 +223,72 @@ class FirebaseDBServices extends CustomerInterface {
 
     return foodCategoryList;
   }
+
+
+  //Save Recipe
+  Future<String> addSaveRecipe(String uid,Recipe recipe) async{
+    try{
+      await userDocRef.doc(uid).collection("SaveRecipe").doc(recipe.docID).set(recipe.toJson());
+
+      return "Success";
+    }on FirebaseException catch (e){
+      print(e);
+      return "failed";
+    }
+  }
+
+  Future<List<Recipe>> getSavedRecipes(String uid) async{
+    try{
+
+      QuerySnapshot querySnapshot = await userDocRef.doc(uid).collection("SaveRecipe").get();
+
+      List<Recipe> recipes = await querySnapshot.docs.map((e) => Recipe.fromSnapshot(e)).toList();
+
+      return recipes;
+    }on FirebaseException catch (e){
+      print(e);
+      return Future.value(null);
+    }
+  }
+
+  Future<String> removeSaveRecipe(String uid,String recipeID) async{
+    try{
+      await userDocRef.doc(uid).collection("SaveRecipe").doc(recipeID).delete();
+
+      return "Success";
+    }on FirebaseException catch (e){
+      print(e);
+      return "failed";
+    }
+  }
+
+
+  Future<String> addToCart(String userId,Map<String,dynamic> productData,String productID) async {
+    try {
+      await userDocRef.doc(userId).collection("Cart").doc(productID).set(productData);
+
+      return "Success";
+    } on FirebaseException catch (e) {
+      print(e);
+      return "failed";
+    }
+
+  }
+
+
+  Future<List<DocumentSnapshot>> getCartList(String userId) async {
+    try {
+      QuerySnapshot querySnapshot  = await userDocRef.doc(userId).collection("Cart").get();
+      List<DocumentSnapshot> documents = querySnapshot.docs;
+
+
+      return documents;
+    } on FirebaseException catch (e) {
+      print(e);
+      return Future.value(null);
+    }
+
+  }
+
+
 }

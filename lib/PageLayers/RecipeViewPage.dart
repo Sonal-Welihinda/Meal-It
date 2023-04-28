@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meal_it/Models/BusinessLayer.dart';
 import 'package:meal_it/Models/IngredientItem.dart';
 import 'package:meal_it/Models/Recipe.dart';
 import 'package:shimmer/shimmer.dart';
@@ -14,10 +15,22 @@ class RecipeViewPage extends StatefulWidget {
 
 class _RecipeViewPageState extends State<RecipeViewPage> {
 
+  BusinessLayer _businessL = BusinessLayer();
+  bool _isFavourite = false;
+
+  void isItFavourite(){
+    _isFavourite = _businessL.isItAlreadyInSavedList(widget.recipe.docID!);
+    setState(() {
+
+    });
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    isItFavourite();
 
   }
 
@@ -43,22 +56,6 @@ class _RecipeViewPageState extends State<RecipeViewPage> {
               ),
             ),
 
-            // Shimmer.fromColors(
-            //   baseColor: Colors.grey[300]!,
-            //   highlightColor: Colors.grey[100]!,
-            //   child: Container(
-            //     height: MediaQuery.of(context).size.height * 0.4,
-            //     width: double.infinity,
-            //     decoration: BoxDecoration(
-            //       borderRadius: BorderRadius.circular(12.0),
-            //       color: Colors.grey[300],
-            //     ),
-            //     child: Image.network(
-            //       widget.recipe.recipeImage,
-            //       fit: BoxFit.cover,
-            //     ),
-            //   ),
-            // ),
 
             //Recipe name
             Padding(
@@ -80,10 +77,15 @@ class _RecipeViewPageState extends State<RecipeViewPage> {
                     alignment: Alignment.centerRight,
                     child: IconButton(
                       icon: Icon(
-                        Icons.favorite_border,
-                        color: Colors.black,
+                        _isFavourite ? Icons.favorite :Icons.favorite_border,
+                        color: _isFavourite ? Colors.redAccent : Colors.black,
                       ),
-                      onPressed: () {},
+                      onPressed: () async {
+
+                        _isFavourite ? await _businessL.removeFromWishlist(widget.recipe) : await _businessL.addSaveRecipe( widget.recipe);
+                        isItFavourite();
+
+                      },
                     ),
                   ),
                 ],
