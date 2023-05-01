@@ -39,7 +39,15 @@ class _PackViewPageState extends State<PackViewPage> {
 
   Future<bool> getAvailableStock() async {
     bool canOrder = true;
-    widget.pack = await _businessL.getSurprisePackByID(widget.pack.docID);
+    SurprisePack? surprisePack = await _businessL.getSurprisePackByID(widget.pack.docID);
+
+    if(surprisePack != null){
+      widget.pack = surprisePack;
+    }else{
+      widget.pack.quantity = BigInt.zero;
+    }
+
+
     BigInt stock = widget.pack.quantity;
 
     if(stock == BigInt.zero){

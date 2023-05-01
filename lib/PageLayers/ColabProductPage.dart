@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meal_it/Models/ColabFoodProduct.dart';
+import 'package:meal_it/Models/FoodCategory.dart';
 import 'package:meal_it/view_models/custom_RadioButton1.dart';
 
 import '../Models/BusinessLayer.dart';
@@ -40,7 +41,16 @@ class _ColabProductPageState extends State<ColabProductPage> {
 
   Future<bool> getAvailableStock() async {
     bool canOrder = true;
-    widget.foodProduct = await _businessL.getColabFoodProductById(widget.foodProduct.productId);
+    ColabFoodProduct? colabFoodProduct= await _businessL.getColabFoodProductById(widget.foodProduct.productId);
+
+    if(colabFoodProduct != null){
+      widget.foodProduct = colabFoodProduct;
+    }else{
+      widget.foodProduct.quantity = 0;
+    }
+
+
+
     BigInt stock = BigInt.parse(widget.foodProduct.quantity.toString());
 
     if(stock == BigInt.zero){

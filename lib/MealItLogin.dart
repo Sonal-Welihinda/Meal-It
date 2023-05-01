@@ -49,12 +49,21 @@ class MealItLogin  extends StatelessWidget{
               const SizedBox(height: 60),
 
               //logo and title
-              const Icon(Icons.login,
-                size: 100,
+              // AspectRatio(
+              //   child: Image.asset("assets/Images/MealItLogo.png"),
+              //   aspectRatio: 1/1
+              // ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Image.asset("assets/Images/MealItLogo.png",
+                  width: double.infinity,
+                ),
               ),
-              Text("Meal It Login page",
+
+              Text("Welcome to Meal It",
                 style: TextStyle(
-                    color: Colors.red[900],
+                    color: Colors.grey.shade600,
                     fontSize: 30
                 ),
               ),
@@ -65,15 +74,20 @@ class MealItLogin  extends StatelessWidget{
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: TextField(
                   controller: email,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-
-                    hintText: "Email address",
+                    labelText: "Email address",
+                    labelStyle: TextStyle(
+                      color: Color.fromRGBO(225, 77, 42, 1)
+                    ),
+                    fillColor: Colors.white,
+                    filled: true,
                     enabledBorder:  OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey.shade600,width: 1)
+                        borderSide: BorderSide(color: Colors.white,width: 1)
                     ),
                     focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black87,width: 2)
-                    )
+                        borderSide: BorderSide(color: Colors.white,width: 2)
+                    ),
                   ),
                 )
               ),
@@ -83,14 +97,20 @@ class MealItLogin  extends StatelessWidget{
                   padding: EdgeInsets.only(left: 20,right: 20,top: 20),
                   child: TextField(
                     controller: password,
+                    keyboardType: TextInputType.visiblePassword,
                     decoration: InputDecoration(
-                      hintText: "Password",
-                      enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey.shade600,width: 1)
+                      labelText: "Password",
+                      labelStyle: TextStyle(
+                          color: Color.fromRGBO(225, 77, 42, 1)
+                      ),
+                      fillColor: Colors.white,
+                      filled: true,
+                      enabledBorder:  OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white,width: 1)
                       ),
                       focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black87,width: 2)
-                      )
+                          borderSide: BorderSide(color: Colors.white,width: 2)
+                      ),
                     ),
                   )
               ),
@@ -101,16 +121,23 @@ class MealItLogin  extends StatelessWidget{
                 width: double.infinity,
                 padding: EdgeInsets.only(right: 20,left: 20),
                 child: TextButton.icon(
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.grey.shade400,
 
+                  style: TextButton.styleFrom(
+                    backgroundColor: Color.fromRGBO(225, 77, 42, 1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)
+                    )
                   ),
 
                   onPressed: (){
                     loginUser(context);
                   },
                   label: Text("Login",
-                    style: TextStyle(fontSize: 28),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   icon: Icon(Icons.login_sharp,
                     size: 28,

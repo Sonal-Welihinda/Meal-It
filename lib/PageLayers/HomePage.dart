@@ -38,6 +38,8 @@ class _HomePageState extends State<HomePage> {
           child: _widgetOptions.elementAt(_selectedIndex),
         ),
         bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Color.fromRGBO(225, 77, 42, 1),
+          fixedColor: Colors.white,
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
           items: const <BottomNavigationBarItem>[

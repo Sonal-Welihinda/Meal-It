@@ -75,7 +75,7 @@ class Branch{
       name: snapshot.get("Name"),
       address: snapshot.get("address"),
       phoneNumber: snapshot.get("phoneNumber"),
-        location: snapshot.get("location") ,
+      location: snapshot.get("location"),
       companyID: snapshot.data().toString().contains("companyID") ? snapshot.get("companyID"):"",
       userCount: snapshot.data().toString().contains("userCount") ? snapshot.get("userCount") : 0
     );

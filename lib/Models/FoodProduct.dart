@@ -53,4 +53,19 @@ class FoodProduct{
         docID: snapshot.id
     );
   }
+
+  factory FoodProduct.fromMap(Map<String, dynamic> snapshot) {
+    return FoodProduct.create(
+        foodName: snapshot["FoodName"],
+        foodDescription: snapshot["FoodDescription"],
+        quantity: BigInt.parse(snapshot["Quantity"]) ,
+        foodRecipe: Recipe.productFromSnapshot(snapshot["FoodRecipe"]) ,
+        price: BigInt.parse(snapshot["Price"]) ,
+        foodTypes: FoodCategory.fromSnapshot3(snapshot["Type"]) ,
+        imgUrl: snapshot["ImgUrl"],
+        branchID: snapshot["BranchID"],
+        docID: snapshot["id"]
+    );
+
+  }
 }

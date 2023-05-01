@@ -12,6 +12,7 @@ import 'package:meal_it/Models/SurprisePack.dart';
 
 import '../DL/CustomerInterface.dart';
 import '../Models/Branch.dart';
+import '../Models/DispatchTimes.dart';
 import '../Models/FoodProduct.dart';
 import '../Models/Recipe.dart';
 
@@ -24,6 +25,7 @@ class FirebaseDBServices extends CustomerInterface {
   final foodProductDocRef = FirebaseFirestore.instance.collection('Food-Product');
   final companyDocRef = FirebaseFirestore.instance.collection('Collab-Branches');
   final recipeDocRef = FirebaseFirestore.instance.collection('Recipes');
+  final deliveryTimeDocRef = FirebaseFirestore.instance.collection('Delivery-Dispatch');
 
   Future<bool> emailsAvailability (String email) async {
     FirebaseAuth auth = FirebaseAuth.instance;
@@ -158,6 +160,18 @@ class FirebaseDBServices extends CustomerInterface {
     return querySnapshot;
   }
 
+  Future<Branch> getColabBranchByID(String branchID) async {
+
+
+    DocumentSnapshot documentSnapshot = await companyDocRef.doc(branchID).get();
+
+    Branch branch  = Branch.fromSnapshot(documentSnapshot);
+
+
+
+    return branch;
+  }
+
 
   //SurprisePack
   @override
@@ -169,10 +183,16 @@ class FirebaseDBServices extends CustomerInterface {
   }
 
   @override
-  Future<SurprisePack> getSurprisePackByID(String surprisePackID) async {
+  Future<SurprisePack?> getSurprisePackByID(String surprisePackID) async {
     DocumentSnapshot documentSnapshot = await surprisePackDocRef.doc(surprisePackID).get();
-    SurprisePack foodPackList = SurprisePack.fromSnapshot(documentSnapshot);
-    return foodPackList;
+    if(documentSnapshot.exists){
+      SurprisePack foodPackList = SurprisePack.fromSnapshot(documentSnapshot);
+      return foodPackList;
+    }else{
+      return null;
+    }
+
+
   }
 
   //MealShip Product
@@ -186,12 +206,18 @@ class FirebaseDBServices extends CustomerInterface {
   }
 
   @override
-  Future<FoodProduct> getFoodProductByID(String foodID) async {
+  Future<FoodProduct?> getFoodProductByID(String foodID) async {
 
     DocumentSnapshot documentSnapshot = await foodProductDocRef.doc(foodID).get();
-    FoodProduct foodProductList = FoodProduct.fromSnapshot(documentSnapshot);
+    if(documentSnapshot.exists){
+      FoodProduct foodProductList = FoodProduct.fromSnapshot(documentSnapshot);
+      return foodProductList;
+    }else{
+      return null;
+    }
 
-    return foodProductList;
+
+
   }
 
   //Colab products
@@ -205,11 +231,17 @@ class FirebaseDBServices extends CustomerInterface {
 
   //Colab products
   @override
-  Future<ColabFoodProduct> getColabFoodProductById(String foodID) async {
+  Future<ColabFoodProduct?> getColabFoodProductById(String foodID) async {
     DocumentSnapshot documentSnapshot = await companyFood.doc(foodID).get();
-    ColabFoodProduct foodProduct = ColabFoodProduct.fromSnapshot(documentSnapshot);
 
-    return foodProduct;
+    if(documentSnapshot.exists){
+      ColabFoodProduct foodProduct = ColabFoodProduct.fromSnapshot(documentSnapshot);
+
+      return foodProduct;
+    }else{
+      return null;
+    }
+
   }
 
 
@@ -275,6 +307,18 @@ class FirebaseDBServices extends CustomerInterface {
 
   }
 
+  Future<String> updateToCart(String userId,Map<String,dynamic> productData,String productID) async {
+    try {
+      await userDocRef.doc(userId).collection("Cart").doc(productID).update(productData);
+
+      return "Success";
+    } on FirebaseException catch (e) {
+      print(e);
+      return "failed";
+    }
+
+  }
+
 
   Future<List<DocumentSnapshot>> getCartList(String userId) async {
     try {
@@ -285,10 +329,40 @@ class FirebaseDBServices extends CustomerInterface {
       return documents;
     } on FirebaseException catch (e) {
       print(e);
-      return Future.value(null);
+      return [];
     }
 
   }
 
+  Future<bool> removeCartItem(String userID,String productID) async {
+    DocumentReference deleteCartRef  = userDocRef.doc(userID).collection("Cart").doc(productID);
+
+    try{
+      await deleteCartRef.delete();
+
+      return true;
+    } on FirebaseException catch (e) {
+    print(e);
+    return false;
+    }
+
+
+  }
+
+
+  //Delivery Dispatch times
+  @override
+  Future<List<DispatchTimes>> getAllActiveDeliveryDispatch() async {
+    try{
+      QuerySnapshot querySnapshot = await deliveryTimeDocRef.where("status", isEqualTo: "Active").get();
+      List<DispatchTimes> times = querySnapshot.docs.map((doc) => DispatchTimes.fromSnapshot(doc)).toList();
+
+      return times;
+
+    }on FirebaseException catch (e){
+      print(e);
+      return Future.value(null);
+    }
+  }
 
 }

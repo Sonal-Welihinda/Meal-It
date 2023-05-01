@@ -50,4 +50,18 @@ class SurprisePack{
       docID: snapshot.id
     );
   }
+
+  factory SurprisePack.fromJson(Map<String,dynamic> snapshot) {
+    print(snapshot);
+    return SurprisePack.name(
+        packName: snapshot["PackName"],
+        packDescription: snapshot["Description"],
+        price: BigInt.parse(snapshot["Price"]) ,
+        quantity: BigInt.parse(snapshot["Quantity"].toString()) ,
+        imageUrl: snapshot["PackImgUrl"],
+        numberOfItems: BigInt.parse(snapshot["NumOfItems"].toString()) ,
+        branchID: snapshot["BranchID"],
+        docID: snapshot["id"]
+    );
+  }
 }

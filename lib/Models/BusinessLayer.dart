@@ -12,11 +12,14 @@ import 'package:meal_it/Models/Branch.dart';
 import 'package:meal_it/Models/CartModel.dart';
 import 'package:meal_it/Models/Customer.dart';
 import 'package:meal_it/Models/Recipe.dart';
+import 'package:meal_it/Models/SaveCustomerDataStatic.dart';
 import 'package:meal_it/Models/SurprisePack.dart';
 import 'package:meal_it/Services/FirebaseDBServices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'ColabFoodProduct.dart';
+import 'CustomerOrder.dart';
+import 'DispatchTimes.dart';
 import 'FoodCategory.dart';
 import 'FoodProduct.dart';
 import 'IngredientItem.dart';
@@ -157,8 +160,8 @@ class BusinessLayer{
     return products;
   }
 
-  Future<ColabFoodProduct> getColabFoodProductById(String foodID) async {
-    ColabFoodProduct colabFoodProduct = await _dbServices.getColabFoodProductById(foodID);
+  Future<ColabFoodProduct?> getColabFoodProductById(String foodID) async {
+    ColabFoodProduct? colabFoodProduct = await _dbServices.getColabFoodProductById(foodID);
 
     return colabFoodProduct;
   }
@@ -167,27 +170,29 @@ class BusinessLayer{
 
   //Surprise pack
   Future<List<SurprisePack>> getSurprisePack() async {
+    //TODO get correct branch
     Branch branch = (await _dbServices.getAllBranches()).last;
     List<SurprisePack> surprisePacks = await _dbServices.getAllSurprisePacks(branch.uid);
     print(surprisePacks.length);
     return surprisePacks;
   }
 
-  Future<SurprisePack> getSurprisePackByID(String surprisePackID) async {
-    SurprisePack surprisePacks = await _dbServices.getSurprisePackByID(surprisePackID);
+  Future<SurprisePack?> getSurprisePackByID(String surprisePackID) async {
+    SurprisePack? surprisePacks = await _dbServices.getSurprisePackByID(surprisePackID);
     return surprisePacks;
   }
 
   //MealShip Product
   Future<List<FoodProduct>> getAllFoodProduct() async {
+    //TODO get correct branch
     Branch branch = (await _dbServices.getAllBranches()).last;
     List<FoodProduct> productList = await _dbServices.getAllFoodProduct(branch.uid);
 
     return productList;
   }
 
-  Future<FoodProduct> getFoodProductByID(String foodID) async {
-    FoodProduct foodProduct = await _dbServices.getFoodProductByID(foodID);
+  Future<FoodProduct?> getFoodProductByID(String foodID) async {
+    FoodProduct? foodProduct = await _dbServices.getFoodProductByID(foodID);
 
     return foodProduct;
   }
@@ -250,7 +255,7 @@ class BusinessLayer{
 
     // Recipe result = recipes.firstWhere((element) => element.docID ==recipeID);
 
-    return result1.length>0;
+    return result1.isNotEmpty;
   }
 
 
@@ -318,6 +323,35 @@ class BusinessLayer{
     return result;
   }
 
+  Future<String> updateToCart({SurprisePack? pack,ColabFoodProduct? colabFoodProduct,FoodProduct? mealShipProduct}) async{
+
+    Map<String,dynamic> productData;
+
+    String userID = await loadSavedValue("UserID");
+    String productID;
+
+    if (pack != null && colabFoodProduct == null && mealShipProduct == null) {
+      productData = pack.toJson();
+      productID = pack.docID;
+      productData["ProductType"]="Pack";
+    } else if (pack == null && colabFoodProduct != null && mealShipProduct == null) {
+      productID = colabFoodProduct.productId;
+      productData = colabFoodProduct.toJson();
+      productData["ProductType"]="ColabProduct";
+
+    } else if (pack == null && colabFoodProduct == null && mealShipProduct != null) {
+      productID = mealShipProduct.docID;
+      productData = mealShipProduct.toJson();
+      productData["ProductType"]="MealShipProduct";
+    } else {
+      return "failed";
+    }
+
+    String result = await _dbServices.updateToCart(userID, productData,productID);
+
+
+    return result;
+  }
 
   Future<CartModel> getCart() async {
     CartModel cartModel =CartModel();
@@ -345,5 +379,225 @@ class BusinessLayer{
     return cartModel;
 
   }
+
+
+  Future<List<DispatchTimes>> getAllActiveDispatchTimes() async{
+    return _dbServices.getAllActiveDeliveryDispatch();
+  }
+
+  // Calculate distance between two locations
+  double calculateDistance(double startLatitude, double startLongitude, double endLatitude, double endLongitude) {
+    double distanceInMeters = Geolocator.distanceBetween(
+      startLatitude,
+      startLongitude,
+      endLatitude,
+      endLongitude,
+    );
+    return distanceInMeters / 1000; // Convert to kilometers
+  }
+
+// Calculate delivery fee based on distance
+  double calculateDeliveryFee(double distance) {
+    const double firstKmFee = 150.0; // Fixed fee for the first kilometer
+    const double additionalKmFee = 120.0; // Fixed fee for each additional kilometer
+    const int firstKm = 1000; // Number of meters in the first kilometer
+
+    // Calculate the number of additional kilometers beyond the first kilometer
+    double additionalKms = (distance - firstKm) / 1000;
+
+    // Calculate the delivery fee
+    double deliveryFee = firstKmFee + (additionalKms * additionalKmFee);
+
+    return deliveryFee;
+  }
+
+
+
+
+  Future<double> getCalculateDeliveryPrice(GeoPoint userLocation) async {
+    double totalDistance = 0;
+    double totalDeliveryFee = 0;
+    List<GeoPoint> locations = [];
+    List<String> colabBranchIDs=[];
+    List<Branch> colabBranches=[];
+    Branch branches;
+    CartModel cart = await getCart();
+
+    branch = (await _dbServices.getAllBranches()).last;
+
+    locations.add(branch.location);
+
+    for(var colabFood in cart.colabFoodProduct){
+      colabBranchIDs.add(colabFood.branchID);
+    }
+
+    for(var colabBranchID in colabBranchIDs){
+      Branch branch = await _dbServices.getColabBranchByID(colabBranchID);
+      colabBranches.add(branch);
+    }
+
+    for(var branch in colabBranches){
+      locations.add(branch.location);
+    }
+
+    locations.add(userLocation);
+
+    for (int i = 0; i < locations.length - 1; i++) {
+      final currentLocation = locations[i];
+      final nextLocation = i < locations.length - 1 ? locations[i + 1] : null;
+
+      if(nextLocation==null){
+        break;
+      }
+
+      double segmentDistance = calculateDistance(
+        currentLocation.latitude,
+        currentLocation.longitude,
+        nextLocation.latitude,
+        nextLocation.longitude,
+      );
+      double segmentDeliveryFee = calculateDeliveryFee(segmentDistance);
+
+      totalDistance += segmentDistance;
+      totalDeliveryFee += segmentDeliveryFee;
+    }
+
+    // if (totalDistance > 0) {
+    //   totalDeliveryFee += 500;
+    // }
+
+    return totalDeliveryFee;
+
+  }
+
+
+  Future<String> addOrder(String address,GeoPoint location) async {
+    //TODO check if there is available stocks
+    CustomerOrder order = CustomerOrder.empty();
+    Customer customer = await getCustomerData();
+
+    order.customerID = customer.uID;
+    order.customerName = customer.name;
+    order.customerEmail = customer.email;
+    order.customerNumber = customer.phoneNumber;
+    order.orderItems = await getCart();
+    order.address = address;
+    order.deliveryFee = await getCalculateDeliveryPrice(location);
+    order.location = location;
+    order.orderPlaceTime = DateTime.now();
+    order.status = "Waiting for driver";
+    //SDelivery = standard , TDelivery = Time Delivery
+    order.deliveryType = order.orderItems.colabFoodProduct.isEmpty ? "SDelivery":"TDelivery";
+
+
+    List<bool> notEnoughQuantity = [];
+    List<bool> productRemoveFromCart=[];
+
+    List<FoodProduct> products = order.orderItems.foodProduct;
+    for(var product in products){
+      FoodProduct? productInfo = await _dbServices.getFoodProductByID(product.docID);
+
+      if(productInfo == null){
+        await _dbServices.removeCartItem(customer.uID, product.docID);
+        productRemoveFromCart.add(true);
+      }
+
+      //null check
+      if(product.quantity<productInfo!.quantity){
+
+      }else{
+        //Remove the product from the cart
+        if(productInfo.quantity == BigInt.zero){
+          await _dbServices.removeCartItem(customer.uID, product.docID);
+          productRemoveFromCart.add(true);
+        }
+        product.quantity = productInfo.quantity;
+        if(productInfo.quantity> BigInt.zero){
+          await updateToCart(mealShipProduct: product);
+          notEnoughQuantity.add(true);
+        }
+
+      //  update the product quantity
+      //  return
+      }
+    }
+
+    List<ColabFoodProduct> colabProducts = order.orderItems.colabFoodProduct;
+    for(var product in colabProducts){
+      ColabFoodProduct? productInfo = await _dbServices.getColabFoodProductById(product.productId);
+      //null check
+      if(productInfo == null){
+        await _dbServices.removeCartItem(customer.uID, product.productId);
+        productRemoveFromCart.add(true);
+      }
+
+      //Check if it within the time range
+
+      //TODO need to remove product if time is expired
+      if(product.offerEndTime.toDate().isBefore(DateTime.now())){
+        await _dbServices.removeCartItem(customer.uID, product.productId);
+      }
+
+      if(product.quantity<productInfo!.quantity){
+
+      }else{
+        //Remove the product from the cart
+        if(productInfo.quantity == 0){
+          await _dbServices.removeCartItem(customer.uID, product.productId);
+          productRemoveFromCart.add(true);
+        }
+        product.quantity = productInfo.quantity;
+        if(productInfo.quantity> 0){
+          await updateToCart(colabFoodProduct: product);
+          notEnoughQuantity.add(true);
+        }
+      }
+
+
+
+    }
+
+    List<SurprisePack> surprisePacks = order.orderItems.surpriseList;
+    for(var pack in surprisePacks){
+      SurprisePack? productInfo = await _dbServices.getSurprisePackByID(pack.docID);
+
+      //Null Check - checking if the product exist on the database
+      if(productInfo == null){
+        await _dbServices.removeCartItem(customer.uID, pack.docID);
+        productRemoveFromCart.add(true);
+
+      }
+
+      if(pack.quantity<productInfo!.quantity){
+
+      }else{
+        //Remove the product from the cart
+        if(productInfo.quantity == BigInt.zero){
+          await _dbServices.removeCartItem(customer.uID, pack.docID);
+          productRemoveFromCart.add(true);
+        }
+        pack.quantity = productInfo.quantity;
+        if(productInfo.quantity> BigInt.zero){
+          await updateToCart(pack: pack);
+          notEnoughQuantity.add(true);
+        }
+
+        //  update the product quantity
+        //  return
+      }
+    }
+
+
+    if(notEnoughQuantity.isNotEmpty || productRemoveFromCart.isNotEmpty){
+      String msg = "failed,${notEnoughQuantity.isNotEmpty ? ",Quantity have change according to availble stocks":""}"
+          " ${ productRemoveFromCart.isNotEmpty ? ",None existing products are removes":""} ";
+
+      return msg;
+    }
+
+
+    return "";
+  }
+
 
 }

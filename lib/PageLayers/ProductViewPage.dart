@@ -40,7 +40,12 @@ class _ProductViewPageState extends State<ProductViewPage> {
 
   Future<bool> getAvailableStock() async {
     bool canOrder = true;
-    widget.foodProduct = await _businessL.getFoodProductByID(widget.foodProduct.docID);
+    FoodProduct? foodProduct = await _businessL.getFoodProductByID(widget.foodProduct.docID);
+
+    if(foodProduct != null){
+      widget.foodProduct  = foodProduct;
+    }
+
     BigInt stock = widget.foodProduct.quantity;
 
     if(stock == BigInt.zero){

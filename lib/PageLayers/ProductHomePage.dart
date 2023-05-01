@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:meal_it/Models/ColabFoodProduct.dart';
 import 'package:meal_it/Models/Customer.dart';
 import 'package:meal_it/Models/FoodProduct.dart';
+import 'package:meal_it/Models/SaveCustomerDataStatic.dart';
 import 'package:meal_it/PageLayers/PackViewPage.dart';
 import 'package:meal_it/PageLayers/ProductViewPage.dart';
 import 'package:meal_it/PageLayers/ProfilePage.dart';
@@ -46,7 +47,7 @@ class _ProductPageState extends State<ProductPage> {
   late String searchQuery;
   Set<Marker> markers = {};
 
-  LatLng currentLocation = LatLng(37.7749, -122.4194); // San Francisco
+  late LatLng currentLocation; // San Francisco
 
 
   void _onMapCreated(GoogleMapController controller) {
@@ -96,7 +97,6 @@ class _ProductPageState extends State<ProductPage> {
   Future<Position> getCurrentLocation() async {
     // Get the current location
     position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-
     return position!;
   }
 
@@ -134,6 +134,7 @@ class _ProductPageState extends State<ProductPage> {
       position = await getCurrentLocation();
     }
 
+    SaveCustomerDataStatic.currentLocation = position;
 
     List<Placemark> placemarks = await placemarkFromCoordinates(position!.latitude, position!.longitude);
     Placemark placemark = placemarks[0];
@@ -424,7 +425,7 @@ class _ProductPageState extends State<ProductPage> {
                 onMapCreated: _onMapCreated,
                 markers: markers,
                 initialCameraPosition: CameraPosition(
-                  target: currentLocation,
+                  target: LatLng(position!.latitude,position!.longitude),
                   zoom: 14.0,
                 ),
                 onTap: (LatLng location) {
